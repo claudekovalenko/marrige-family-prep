@@ -210,3 +210,12 @@ test('an older backup without links gets the seeds', () => {
   store.replaceState(old);
   assert.equal(store.links().length, SEED_LINKS.length);
 });
+
+test('a seed link added later reaches someone who already has the app', () => {
+  const s = JSON.parse(store.exportJSON());
+  const later = SEED_LINKS[SEED_LINKS.length - 1];
+  s.links = s.links.filter((l) => l.id !== later.id);
+  s.seededLinks = s.seededLinks.filter((id) => id !== later.id);
+  store.replaceState(s);
+  assert.equal(store.links()[0].id, later.id);
+});

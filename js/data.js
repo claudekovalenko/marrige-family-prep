@@ -227,6 +227,12 @@ export const SEED_LINKS = [
     title: 'What I value in marriage',
     url: 'https://www.youtube.com/watch?v=GrdFmBjmCx0',
     note: ''
+  },
+  {
+    id: 'yt-UaWCKXk8ytw',
+    title: 'More on what I value in marriage',
+    url: 'https://www.youtube.com/watch?v=UaWCKXk8ytw',
+    note: ''
   }
 ];
 

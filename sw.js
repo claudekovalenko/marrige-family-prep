@@ -1,5 +1,5 @@
 // Offline shell. Bump CACHE when any file below changes so clients refresh.
-const CACHE = 'prepare-v3';
+const CACHE = 'prepare-v4';
 
 const ASSETS = [
   './',

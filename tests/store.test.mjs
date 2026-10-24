@@ -12,7 +12,7 @@ globalThis.localStorage = {
 };
 
 const store = await import('../js/store.js');
-const { PILLARS } = await import('../js/data.js');
+const { PILLARS, SEED_LINKS } = await import('../js/data.js');
 
 test('starts empty with a slot for every pillar', () => {
   const s = store.getState();
@@ -179,4 +179,34 @@ test('the clean-day streak tracks both the current run and the longest ever', ()
   assert.equal(store.bestStreak('clean'), 5, 'the best run stands even after a fall');
   store.resetAll();
   assert.equal(store.bestStreak('clean'), 0);
+});
+
+test('links are seeded once and only take web addresses', () => {
+  const seeded = store.links().find((l) => l.id === SEED_LINKS[0].id);
+  assert.ok(seeded, 'seed link missing');
+  assert.equal(store.cleanUrl('javascript:alert(1)'), null);
+  assert.equal(store.cleanUrl('not a link'), null);
+  assert.equal(store.cleanUrl('youtube.com/watch?v=x'), 'https://youtube.com/watch?v=x');
+
+  assert.equal(store.addLink({ url: 'data:text/html,hi' }), null);
+  const id = store.addLink({ url: 'https://www.example.org/talk', note: ' why ' });
+  const added = store.links()[0];
+  assert.equal(added.id, id);
+  assert.equal(added.title, 'example.org');
+  assert.equal(added.note, 'why');
+  assert.equal(store.editLink(id, { url: 'javascript:void 0' }), false);
+  assert.equal(store.links()[0].url, 'https://www.example.org/talk');
+
+  store.removeLink(SEED_LINKS[0].id);
+  store.replaceState(JSON.parse(store.exportJSON()));
+  assert.ok(!store.links().some((l) => l.id === SEED_LINKS[0].id), 'deleted seed came back');
+  store.removeLink(id);
+});
+
+test('an older backup without links gets the seeds', () => {
+  const old = JSON.parse(store.exportJSON());
+  delete old.links;
+  delete old.seededLinks;
+  store.replaceState(old);
+  assert.equal(store.links().length, SEED_LINKS.length);
 });

@@ -5,6 +5,46 @@ import { html, raw, el, on, arm, esc, shortDate, toast } from '../ui.js';
 // Which card is open for editing, and whether the "add" form is showing.
 let editingId = null;
 let adding = false;
+// The same, for links.
+let editingLinkId = null;
+let addingLink = false;
+
+function linkForm(l, cls) {
+  return `<form class="enc-form ${cls}">
+    <input type="text" name="url" value="${esc(l ? l.url : '')}" inputmode="url" autocomplete="off" required placeholder="Paste a link — e.g. a YouTube video" />
+    <input type="text" name="title" value="${esc(l ? l.title : '')}" maxlength="80" placeholder="What it is — e.g. A sermon on headship" />
+    <textarea name="note" rows="3" placeholder="Why it matters to you (optional)">${esc(l ? l.note : '')}</textarea>
+    <div class="row row-end">
+      <button type="button" class="link-btn ${l ? 'cancel-link-edit' : 'cancel-link-add'}">Cancel</button>
+      <button type="submit" class="btn btn-primary">Save</button>
+    </div>
+  </form>`;
+}
+
+function hostOf(url) {
+  try {
+    return new URL(url).hostname.replace(/^(www|m)\./, '');
+  } catch (e) {
+    return '';
+  }
+}
+
+function linkItem(l) {
+  if (l.id === editingLinkId) {
+    return `<li class="ref is-editing" data-id="${l.id}">${linkForm(l, 'edit-link')}</li>`;
+  }
+  return `<li class="ref" data-id="${l.id}">
+    <a class="ref-link" href="${esc(l.url)}" target="_blank" rel="noopener noreferrer">
+      <span class="ref-title">${esc(l.title)}</span>
+      <span class="ref-host">${esc(hostOf(l.url))} &nearr;</span>
+    </a>
+    ${l.note ? `<p class="ref-note">${esc(l.note)}</p>` : ''}
+    <div class="entry-actions">
+      <button class="link-btn" data-edit-link="${l.id}">Edit</button>
+      <button class="link-btn danger" data-delete-link="${l.id}">Delete</button>
+    </div>
+  </li>`;
+}
 
 function card(e) {
   if (e.id === editingId) {
@@ -38,6 +78,7 @@ function card(e) {
 
 export function rememberView() {
   const list = store.encouragements();
+  const refs = store.links();
 
   const root = el(html`
     <div class="stack">
@@ -67,6 +108,13 @@ export function rememberView() {
             </section>`
           : '<button class="btn add-enc-btn">Add an encouragement</button>'
       )}
+
+      <section class="card">
+        <h2 class="card-title">Worth returning to</h2>
+        <p class="muted">Videos, sermons, and articles that show what you value in a marriage.</p>
+        <ul class="refs">${raw(refs.map(linkItem).join('') || '<li class="empty">No links yet.</li>')}</ul>
+        ${raw(addingLink ? linkForm(null, 'add-link') : '<button class="btn add-link-btn">Add a link</button>')}
+      </section>
 
       <section class="card">
         <h2 class="card-title">For the hard days</h2>
@@ -132,6 +180,58 @@ export function rememberView() {
     if (store.addEncouragement({ title: f.elements.title.value, text: f.elements.text.value, source: f.elements.source.value })) {
       adding = false;
       toast('Written down.');
+    }
+  });
+
+  on(root, '[data-edit-link]', 'click', (e) => {
+    editingLinkId = e.currentTarget.dataset.editLink;
+    addingLink = false;
+    store.update(() => {});
+  });
+
+  on(root, '.cancel-link-edit', 'click', () => {
+    editingLinkId = null;
+    store.update(() => {});
+  });
+
+  on(root, '.edit-link', 'submit', (e) => {
+    e.preventDefault();
+    const f = e.currentTarget;
+    const id = f.closest('.ref').dataset.id;
+    editingLinkId = null;
+    if (store.editLink(id, { title: f.elements.title.value, url: f.elements.url.value, note: f.elements.note.value })) {
+      toast('Saved.');
+    } else {
+      editingLinkId = id;
+      toast('That does not look like a web link.');
+    }
+  });
+
+  on(root, '[data-delete-link]', 'click', (e) => {
+    const btn = e.currentTarget;
+    arm(btn, 'Tap again to delete', () => store.removeLink(btn.dataset.deleteLink));
+  });
+
+  on(root, '.add-link-btn', 'click', () => {
+    addingLink = true;
+    editingLinkId = null;
+    store.update(() => {});
+  });
+
+  on(root, '.cancel-link-add', 'click', () => {
+    addingLink = false;
+    store.update(() => {});
+  });
+
+  on(root, '.add-link', 'submit', (e) => {
+    e.preventDefault();
+    const f = e.currentTarget;
+    addingLink = false;
+    if (store.addLink({ title: f.elements.title.value, url: f.elements.url.value, note: f.elements.note.value })) {
+      toast('Link saved.');
+    } else {
+      addingLink = true;
+      toast('That does not look like a web link.');
     }
   });
 

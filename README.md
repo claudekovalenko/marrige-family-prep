@@ -20,7 +20,7 @@ A small, private, offline-first PWA for the work that comes before marriage — 
 
 **Today** — the verse for the day, daily and weekly rhythms with streaks, and the next faithful step from each pillar.
 
-**Remember** — the things He has already shown you, kept where you can find them on a hard day. Seeded with the aisle vision; one of them is pinned to the Today screen, and you can add, edit, or re-pin any of them. Below your own is a fixed set of promises for when the waiting is long.
+**Remember** — the things He has already shown you, kept where you can find them on a hard day. Seeded with the aisle vision; one of them is pinned to the Today screen, and you can add, edit, or re-pin any of them. **Worth returning to** keeps links — videos, sermons, articles — that show what you value in a marriage; add, edit, or delete them there. Below that is a fixed set of promises for when the waiting is long.
 
 **Journal** — prayers, reflections, and answered prayer, so you can look back and see what He actually did.
 

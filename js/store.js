@@ -1,5 +1,5 @@
 // Local-first state. Everything lives in this browser; nothing is sent anywhere.
-import { PILLARS, HABITS, SEED_ENCOURAGEMENTS } from './data.js';
+import { PILLARS, HABITS, SEED_ENCOURAGEMENTS, SEED_LINKS } from './data.js';
 
 const KEY = 'marriage-prep:v1';
 const SCHEMA = 1;
@@ -16,6 +16,8 @@ function blank() {
     customHabits: [],
     journal: [],
     encouragements: SEED_ENCOURAGEMENTS.map((e) => Object.assign({}, e)),
+    links: [],
+    seededLinks: [],
     settings: { theme: 'auto', name: '' }
   };
 }
@@ -35,8 +37,16 @@ function normalize(raw) {
     encouragements: Array.isArray(s.encouragements)
       ? s.encouragements
       : SEED_ENCOURAGEMENTS.map((e) => Object.assign({}, e)),
+    links: Array.isArray(s.links) ? s.links : [],
+    seededLinks: Array.isArray(s.seededLinks) ? s.seededLinks : [],
     settings: Object.assign({}, base.settings, s.settings || {})
   };
+  // Seed any link not seeded before. Later seeds land above earlier ones.
+  for (const l of SEED_LINKS) {
+    if (out.seededLinks.includes(l.id)) continue;
+    out.seededLinks.push(l.id);
+    if (!out.links.some((x) => x.id === l.id)) out.links.unshift(Object.assign({}, l));
+  }
   for (const p of PILLARS) {
     const prev = (s.pillars && s.pillars[p.id]) || {};
     out.pillars[p.id] = {
@@ -349,6 +359,62 @@ export function removeEncouragement(id) {
 export function pinEncouragement(id) {
   update((s) => {
     for (const e of s.encouragements) e.pinned = e.id === id;
+  });
+}
+
+/* ---------- links ---------- */
+
+/** Only web links; anything else (javascript:, data:, typos) is refused. */
+export function cleanUrl(value) {
+  let v = String(value || '').trim();
+  if (!v) return null;
+  if (!/^[a-z][a-z0-9+.-]*:/i.test(v)) v = 'https://' + v;
+  try {
+    const u = new URL(v);
+    if (u.protocol !== 'https:' && u.protocol !== 'http:') return null;
+    if (!u.hostname.includes('.')) return null;
+    return u.href;
+  } catch (e) {
+    return null;
+  }
+}
+
+export function links() {
+  return state.links;
+}
+
+export function addLink({ title, url, note }) {
+  const href = cleanUrl(url);
+  if (!href) return null;
+  const id = 'l_' + Math.random().toString(36).slice(2, 9);
+  update((s) => {
+    s.links.unshift({
+      id,
+      title: String(title || '').trim() || new URL(href).hostname.replace(/^www\./, ''),
+      url: href,
+      note: String(note || '').trim(),
+      at: new Date().toISOString()
+    });
+  });
+  return id;
+}
+
+export function editLink(id, { title, url, note }) {
+  const href = url === undefined ? undefined : cleanUrl(url);
+  if (href === null) return false;
+  update((s) => {
+    const l = s.links.find((x) => x.id === id);
+    if (!l) return;
+    if (title !== undefined) l.title = String(title).trim() || l.title;
+    if (href) l.url = href;
+    if (note !== undefined) l.note = String(note).trim();
+  });
+  return true;
+}
+
+export function removeLink(id) {
+  update((s) => {
+    s.links = s.links.filter((l) => l.id !== id);
   });
 }
 

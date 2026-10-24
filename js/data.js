@@ -219,6 +219,17 @@ export const SEED_ENCOURAGEMENTS = [
   }
 ];
 
+// Links kept for reference. Each one is added once, by id, so a new seed shows
+// up for someone who already has the app, and a deleted one stays deleted.
+export const SEED_LINKS = [
+  {
+    id: 'yt-GrdFmBjmCx0',
+    title: 'What I value in marriage',
+    url: 'https://www.youtube.com/watch?v=GrdFmBjmCx0',
+    note: ''
+  }
+];
+
 // Fixed, not editable \u2014 for the days when the work is heavy.
 export const PROMISES = [
   { text: 'No temptation has overtaken you that is not common to man. God is faithful, and he will not let you be tempted beyond your ability, but with the temptation he will also provide the way of escape.', ref: '1 Corinthians 10:13' },
